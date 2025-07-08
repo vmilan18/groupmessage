@@ -1,4 +1,4 @@
-const socket = io('http://https://group-pnm2.onrender.com/');
+const socket = io('https://groupmessage.onrender.com/');
 
 //Get DOM element in respectibe js variable s
 const form = document.getElementById('send-container');
