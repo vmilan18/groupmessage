@@ -1,44 +1,57 @@
-//Node server which will handle socket io connections
-const io = require('socket.io')(8000, {
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+
+const app = express();
+const server = http.createServer(app);
+
+// Enable CORS for your frontend
+app.use(cors({
+    origin: ['http://127.0.0.1:5500', 'https://groupmessage.netlify.app'],
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
+
+// Setup Socket.IO with CORS
+const io = new Server(server, {
     cors: {
-        origin: ["http://127.0.0.1:5500", "https://groupmessage.netlify.app"], // Must exactly match frontend origin
-        methods: ["GET", "POST"]
+        origin: ['http://127.0.0.1:5500', 'https://groupmessage.netlify.app'],
+        methods: ['GET', 'POST'],
+        credentials: true
     }
 });
 
-const express = require('express');
-const app = express();
-
-const PORT = process.env.PORT || 3000;
-
-// 👇 Define this route to prevent 404 on homepage
+// Welcome route
 app.get('/', (req, res) => {
-  res.send('Welcome to GroupMessage API!');
+    res.send('Welcome to GroupMessage API!');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Start the server
+const PORT = process.env.PORT || 8000;
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
 
+// Store connected users
 const users = {};
 
-io.on('connection', socket =>{
-    //if any new user joins , let other users connect to the server know
-    socket.on('new-user-joined', name =>{
-        // console.log("New user", name);
+// Socket.IO connection handling
+io.on('connection', socket => {
+    socket.on('new-user-joined', name => {
         users[socket.id] = name;
-        socket.broadcast.emit('user-joined', name)
-    });
-    
-    //if someone send a message, broadcast it to all to other people 
-    socket.on('send', message =>{
-        socket.broadcast.emit('receive',{message: message, name: users[socket.id]})
+        socket.broadcast.emit('user-joined', name);
     });
 
-    //if someone leave the chat, let others know
-    socket.on('disconnect', message=>{
-        socket.broadcast.emit('left', users[socket.id])
+    socket.on('send', message => {
+        socket.broadcast.emit('receive', {
+            message: message,
+            name: users[socket.id]
+        });
+    });
+
+    socket.on('disconnect', () => {
+        socket.broadcast.emit('left', users[socket.id]);
         delete users[socket.id];
-    })
-
-})
+    });
+});
