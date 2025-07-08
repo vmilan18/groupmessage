@@ -1,7 +1,7 @@
 //Node server which will handle socket io connections
 const io = require('socket.io')(8000, {
     cors: {
-        origin: "http://127.0.0.1:5500", // Must exactly match frontend origin
+        origin: ["http://127.0.0.1:5500", "https://groupmessage.netlify.app"], // Must exactly match frontend origin
         methods: ["GET", "POST"]
     }
 });
